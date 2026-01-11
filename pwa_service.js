@@ -2,6 +2,7 @@ const VERSION = "v.1.0.0"
 
 const APP_STATIC_RESOURCES = [
   "/quantumbridge/manifest.json",
+  "/quantumbridge/favicon.png",
   "/quantumbridge/quantumbridge.html",
   "/quantumbridge/icons/icon-192x192.png",
   "/quantumbridge/icons/icon-512x512.png",
