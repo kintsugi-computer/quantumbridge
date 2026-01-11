@@ -188,7 +188,7 @@ button[disabled]{
 const VERSION = "v.1.0.0"
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("quantumbridge/pwa_service.js").then(
+  navigator.serviceWorker.register("pwa_service.js").then(
     (registration) => {
       console.log("Service worker registration successful:", registration);
     },
