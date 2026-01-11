@@ -1,0 +1,329 @@
+<!doctype html>
+<head>
+    <title>QuantumBridge</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+:root {
+    --body-colour: #ffffff;
+    --body-background: #000000;
+    --disabled-button-background: #f0f0f0;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--body-colour);
+    background-color: var(--body-background);
+    text-align: center;
+}
+
+table {
+   margin: 0 auto;
+    display: table;
+}
+
+th {
+    font-size: 4vh;
+    text-align: right;
+}
+
+input[type=number] {
+    text-align: right;
+}
+
+input[type=text] {
+    text-align: center;
+}
+
+input {
+    border: 0.5vh solid white;
+    font-size: 4vh;
+    height: 5vh;
+    width: 10vw;
+    color: var(--body-colour);
+    background-color: var(--body-background);
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+button {
+    font-size: 4vh;
+}
+
+button:disabled,
+button[disabled]{
+    color: var(--body-colour);
+    background-color: var(--disabled-button-background);
+}
+    </style>
+</head>
+
+<body>
+    <div id="screen">
+      <div id="topContainer">
+        <h1 id="handString"></h1>
+        <h3 id="displayString">Stand in ronde: </h3>
+      </div>
+      <table>
+        <tr>
+          <th>Naam:</th>
+          <td><input id="Sp1Naam" type="text" value="Speler 1"></input></td>
+          <td><input id="Sp2Naam" type="text" value="Speler 2"></input></td>
+          <td><input id="Sp3Naam" type="text" value="Speler 3"></input></td>
+          <td><input id="Sp4Naam" type="text" value="Speler 4"></input></td>
+        </tr>
+        <tr>
+          <th>Geboden:</th>
+          <td><input id="Sp1Geboden" type="number" min="0" step="1"></input></td>
+          <td><input id="Sp2Geboden" type="number" min="0" step="1"></input></td>
+          <td><input id="Sp3Geboden" type="number" min="0" step="1"></input></td>
+          <td><input id="Sp4Geboden" type="number" min="0" step="1"></input></td>
+        </tr>
+        <tr>
+          <th>Gehaald:</th>
+          <td><input id="Sp1Gehaald" type="number" min="0" step="1"></input></td>
+          <td><input id="Sp2Gehaald" type="number" min="0" step="1"></input></td>
+          <td><input id="Sp3Gehaald" type="number" min="0" step="1"></input></td>
+          <td><input id="Sp4Gehaald" type="number" min="0" step="1"></input></td>
+        </tr>
+        <tr>
+          <th>Score:</th>
+          <td><input id="Sp1Score" type="number" min="0" step="1" disabled></input></td>
+          <td><input id="Sp2Score" type="number" min="0" step="1" disabled></input></td>
+          <td><input id="Sp3Score" type="number" min="0" step="1" disabled></input></td>
+          <td><input id="Sp4Score" type="number" min="0" step="1" disabled></input></td>
+        </tr>
+        <tr>
+          <th>Stand:</th>
+          <td><input id="Sp1Stand" type="number" min="0" step="1" disabled></input></td>
+          <td><input id="Sp2Stand" type="number" min="0" step="1" disabled></input></td>
+          <td><input id="Sp3Stand" type="number" min="0" step="1" disabled></input></td>
+          <td><input id="Sp4Stand" type="number" min="0" step="1" disabled></input></td>
+        </tr>
+      </table>
+      <div id="buttonBar">
+        <button id="backButton">&lt&lt</button>
+        <button id="redoButton">Herstel</button>
+        <button id="calcButton">Bereken</button>
+        <button id="newButton">Volgende</button>
+        <button id="nextButton">&gt&gt</button>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+
+const backButton = document.querySelector("#backButton")
+const calcButton = document.querySelector("#calcButton")
+const newButton = document.querySelector("#newButton")
+const nextButton = document.querySelector("#nextButton")
+const cardsString = document.querySelector("#cardsString")
+const handString = document.querySelector("#handString")
+
+class Hand {
+  bid = ""
+  tricks = ""
+  score = 0
+  total = 0
+
+  next = null
+  previous = null
+  index = 0
+
+  constructor(previous) {
+
+    this.previous = previous
+
+    if ( this.previous !== null ) {
+      this.previous.next = this
+      this.index = this.previous.index+1
+      this.total = this.previous.total
+    }
+  }
+
+  calculate() {
+    if (this.bid != "") {
+      this.score = this.tricks * 5
+      if ( this.bid == this.tricks ) {
+        this.score += (this.index+1)*10
+      } 
+    }
+    if ( this.previous !== null ) {
+      this.previous.calculate()
+      this.total = this.previous.total + this.score
+    } else {
+      this.total = this.score
+    }
+  }
+
+  display(bidinput, tricksinput, scoreinput, totalinput) {
+    bidinput.value = this.bid
+    tricksinput.value = this.tricks
+    scoreinput.value = this.score
+    totalinput.value = this.total
+  }
+
+  retrieve(bidinput, tricksinput) {
+    this.bid = parseInt(bidinput.value || "0", 10)
+    this.tricks = parseInt(tricksinput.value || "0", 10)
+  }
+}
+
+class PlayerHands {
+  hands = []
+
+  constructor() {
+    this.hands = [
+      new Hand(null)
+    ]
+  }
+
+  calculate() {
+    this.hands[this.hands.length-1].calculate()
+  }
+
+  new_hand() {
+    this.hands.push(new Hand(this.hands[this.hands.length-1]))
+  }
+
+  display_hand(prefix, displayed_hand) {
+    this.hands[displayed_hand].display(
+      document.querySelector(prefix+"Geboden"),
+      document.querySelector(prefix+"Gehaald"),
+      document.querySelector(prefix+"Score"),
+      document.querySelector(prefix+"Stand"),
+    )
+  }
+
+  retrieve(prefix, displayed_hand) {
+    this.hands[displayed_hand].retrieve(
+      document.querySelector(prefix+"Geboden"),
+      document.querySelector(prefix+"Gehaald")
+    )
+  }
+}
+
+class QuantumBridge {
+  max_hands = 13
+  cards_in_first_hand = 1
+  displayed_hand = 0
+  player1 = null
+  player2 = null
+  player3 = null
+  player4 = null
+
+  constructor() {
+    this.player1 = new PlayerHands()
+    this.player2 = new PlayerHands()
+    this.player3 = new PlayerHands()
+    this.player4 = new PlayerHands()
+    this.displayed_hand = this.player1.hands.length - 1
+    this.display()
+  }
+
+  size() {
+    return this.player1.hands.length
+  }
+
+  calculate() {
+    this.retrieve()
+    this.player1.calculate()
+    this.player2.calculate()
+    this.player3.calculate()
+    this.player4.calculate()
+    this.display()
+  }
+
+  new_hand() {
+    if (this.size() < this.max_hands) {
+      this.player1.new_hand()
+      this.player2.new_hand()
+      this.player3.new_hand()
+      this.player4.new_hand()
+    }
+    this.displayed_hand = this.size() - 1
+    
+    this.display()
+  }
+
+  display() {
+    handString.innerText = "Huidige ronde: "+ this.size() + " kaart(en)"
+    displayString.innerText = "Overzicht ronde "+(this.displayed_hand+1)+":"
+    this.player1.display_hand("#Sp1", this.displayed_hand)
+    this.player2.display_hand("#Sp2", this.displayed_hand)
+    this.player3.display_hand("#Sp3", this.displayed_hand)
+    this.player4.display_hand("#Sp4", this.displayed_hand)
+    this.enable_buttons()
+  }
+
+  enable_buttons() {
+    if (this.displayed_hand == (this.size() - 1)) {
+      calcButton.disabled = false
+      newButton.disabled = false
+      redoButton.disabled = true
+    } else {
+      calcButton.disabled = true
+      newButton.disabled = true
+      redoButton.disabled = false
+    }
+  }
+
+  retrieve() {
+    this.player1.retrieve("#Sp1", this.displayed_hand)
+    this.player2.retrieve("#Sp2", this.displayed_hand)
+    this.player3.retrieve("#Sp3", this.displayed_hand)
+    this.player4.retrieve("#Sp4", this.displayed_hand)
+  }
+
+  display_next() {
+    if (this.displayed_hand < this.player1.hands.length - 1 ) {
+      this.displayed_hand += 1
+    }
+    this.enable_buttons()
+    this.display()
+  }
+
+  display_previous() {
+    if (this.displayed_hand > 0) {
+      this.displayed_hand -= 1
+    }
+    this.enable_buttons()
+    this.display()
+  }
+}
+
+const quantumBridge = new QuantumBridge()
+
+backButton.onclick = function() {
+  quantumBridge.display_previous()
+}
+
+calcButton.onclick = function() {
+  quantumBridge.calculate()
+}
+
+newButton.onclick = function() {
+  quantumBridge.new_hand()
+}
+
+nextButton.onclick = function () {
+  quantumBridge.display_next()
+}
+
+redoButton.onclick = function () {
+  calcButton.disabled = false
+  newButton.disabled = false
+}
+
+
+    </script>
+</body>
