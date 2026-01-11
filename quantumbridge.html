@@ -69,6 +69,16 @@ button[disabled]{
 </head>
 
 <body>
+    <dialog id="confirm">
+      <div>
+        <h3 id="confirm_title" class="dialog_text">Confirm Title</h3>
+        <div id="confirm_button_bar">
+          <button id="confirm_ok" class="accept">OK</button>
+          <button id="confirm_cancel" class="decline">Annuleer</button>
+        </div>
+      </div>
+    </dialog>
+
     <div id="screen">
       <div id="topContainer">
         <h1 id="handString"></h1>
@@ -113,10 +123,13 @@ button[disabled]{
       </table>
       <div id="buttonBar">
         <button id="backButton">&lt&lt</button>
-        <button id="redoButton">Herstel</button>
         <button id="calcButton">Bereken</button>
         <button id="newButton">Volgende</button>
         <button id="nextButton">&gt&gt</button>
+      </div>
+      <div id="gameButtonBar">
+        <button id="redoButton">Herstel</button>
+        <button id="newGameButton">Nieuw spel</button>
       </div>
     </div>
 
@@ -126,6 +139,7 @@ const backButton = document.querySelector("#backButton")
 const calcButton = document.querySelector("#calcButton")
 const newButton = document.querySelector("#newButton")
 const nextButton = document.querySelector("#nextButton")
+const newGameButton = document.querySelector("#newGameButton")
 const cardsString = document.querySelector("#cardsString")
 const handString = document.querySelector("#handString")
 
@@ -222,6 +236,10 @@ class QuantumBridge {
   player4 = null
 
   constructor() {
+    this.reset()
+  }
+
+  reset() {
     this.player1 = new PlayerHands()
     this.player2 = new PlayerHands()
     this.player3 = new PlayerHands()
@@ -229,7 +247,6 @@ class QuantumBridge {
     this.displayed_hand = this.player1.hands.length - 1
     this.display()
   }
-
   size() {
     return this.player1.hands.length
   }
@@ -299,6 +316,47 @@ class QuantumBridge {
     this.enable_buttons()
     this.display()
   }
+
+}
+
+
+function closeDialog(dialog) {
+    dialog.style.display = 'none';
+    dialog.close(); 
+}
+
+function showConfirmDialog(config, accept, reject) {
+
+    var titleTxt = config.title || 'Confirm?';
+    var okTxt = config.ok || 'Ja';
+    var cancelTxt = config.cancel || 'Nee';
+
+    var dialog = document.querySelector('#confirm');
+    var title = document.querySelector('#confirm_title');
+    var ok_button = document.querySelector('#confirm_ok');
+    var cancel_button = document.querySelector('#confirm_cancel');
+
+    title.innerText = titleTxt;
+    ok_button.innerText = okTxt;
+    cancel_button.innerText = cancelTxt;
+
+    ok_button.onclick = function() {
+        accept();
+        closeDialog(dialog);
+    };
+    cancel_button.onclick = function() {
+        reject();
+        closeDialog(dialog);
+    };
+
+    dialog.style.display = 'flex';
+    dialog.showModal();
+}
+
+function confirmDialog(config, accept, reject) {
+    return new Promise(function() {
+        showConfirmDialog(config, accept, reject);
+    });
 }
 
 const quantumBridge = new QuantumBridge()
@@ -322,6 +380,18 @@ nextButton.onclick = function () {
 redoButton.onclick = function () {
   calcButton.disabled = false
   newButton.disabled = false
+}
+
+newGameButton.onclick = function () {
+  confirmDialog(
+    {
+      title: "Huidig spel verwijderen en opnieuw beginnen?",
+      ok: "Ja",
+      cancel: "Nee"
+    },
+      function () {quantumBridge.reset()},
+      function () {}
+  );
 }
 
 
