@@ -151,7 +151,7 @@ class Hand {
   }
 
   calculate() {
-    if (this.bid != "") {
+    if (this.bid !== "") {
       this.score = this.tricks * 5
       if ( this.bid == this.tricks ) {
         this.score += (this.index+1)*10
