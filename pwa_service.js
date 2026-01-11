@@ -1,11 +1,10 @@
 const VERSION = "v.1.0.0"
 
 const APP_STATIC_RESOURCES = [
-  "/",
-  "/quantumbridge.html",
-  "/icons/icon-192x192.png",
-  "/icons/icon-512x512.png",
-  "/icons/icon-180x180.png"
+  "/quantumbridge/quantumbridge.html",
+  "/quantumbridge/icons/icon-192x192.png",
+  "/quantumbridge/icons/icon-512x512.png",
+  "/quantumbridge/icons/icon-180x180.png"
 ];
 
 const CACHE_NAME = `quantumbridge-${VERSION}`;
@@ -40,7 +39,7 @@ self.addEventListener("fetch", (event) => {
   // when seeking an HTML page
   if (event.request.mode === "navigate") {
     // Return to the quantumbridge.html page
-    event.respondWith(caches.match("/quantumbridge.html"));
+    event.respondWith(caches.match("/quantumbridge/quantumbridge.html"));
     return;
   }
 
