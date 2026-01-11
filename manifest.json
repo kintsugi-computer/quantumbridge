@@ -1,9 +1,11 @@
 {
   "name": "QuantumBridge",
+  "id": "a08c2d8db55f4e5baf496e551d240e6c",
   "short_name": "QuantumBridge",
   "description": "Score keeping for QuantumBridge",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "landscape-primary",
   "background_color": "#ffffff",
   "theme_color": "#3b82f6",
   "icons": [
