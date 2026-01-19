@@ -1,4 +1,4 @@
-const VERSION = "v.1.0.0"
+const VERSION = "v.1.0.1"
 
 const APP_STATIC_RESOURCES = [
   "/quantumbridge/manifest.json",
