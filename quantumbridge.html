@@ -185,20 +185,20 @@ button[disabled]{
 
     <script type="text/javascript">
 
-const VERSION = "v.1.0.0"
+const VERSION = "v.1.0.1"
 
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("pwa_service.js").then(
-    (registration) => {
-      console.log("Service worker registration successful:", registration);
-    },
-    (error) => {
-      console.error(`Service worker registration failed: ${error}`);
-    },
-  );
-} else {
-  console.error("Service workers are not supported.");
-}
+//if ("serviceWorker" in navigator) {
+//  navigator.serviceWorker.register("pwa_service.js").then(
+//    (registration) => {
+//      console.log("Service worker registration successful:", registration);
+//    },
+//    (error) => {
+//      console.error(`Service worker registration failed: ${error}`);
+//    },
+//  );
+//} else {
+//  console.error("Service workers are not supported.");
+//}
 
 const backButton = document.querySelector("#backButton")
 const calcButton = document.querySelector("#calcButton")
