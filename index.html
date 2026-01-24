@@ -47,8 +47,8 @@
 
     <style>
 :root {
-    --body-colour: #ffffff;
-    --body-background: #000000;
+    --body-colour: #000000;
+    --body-background: #ffffff;
     --disabled-button-background: #f0f0f0;
 }
 
@@ -65,7 +65,7 @@ table {
 }
 
 th {
-    width: 18vw;
+    width: 8vw;
     font-size: 4vh;
     text-align: right;
 }
@@ -82,7 +82,7 @@ input[type=text] {
 }
 
 input {
-    border: 0.5vh solid white;
+    border: 0.5vh solid var{--body-colour};
     font-size: 4vh;
     height: 5vh;
     width: 18vw;
@@ -105,6 +105,7 @@ button {
     font-size: 4vh;
     border-radius: 1vw;
     width: 15vw;
+   margin: 0.4vw ;
 }
 
 button:disabled,
@@ -185,7 +186,7 @@ button[disabled]{
 
     <script type="text/javascript">
 
-const VERSION = "v.1.0.1"
+const VERSION = "v.1.0.2" ;
 
 //if ("serviceWorker" in navigator) {
 //  navigator.serviceWorker.register("pwa_service.js").then(
@@ -200,255 +201,322 @@ const VERSION = "v.1.0.1"
 //  console.error("Service workers are not supported.");
 //}
 
-const backButton = document.querySelector("#backButton")
-const calcButton = document.querySelector("#calcButton")
-const newButton = document.querySelector("#newButton")
-const nextButton = document.querySelector("#nextButton")
-const newGameButton = document.querySelector("#newGameButton")
-const cardsString = document.querySelector("#cardsString")
-const handString = document.querySelector("#handString")
-const versionString = document.querySelector("#versionString")
+const backButton = document.querySelector("#backButton") ;
+const calcButton = document.querySelector("#calcButton") ;
+const newButton = document.querySelector("#newButton") ;
+const nextButton = document.querySelector("#nextButton") ;
+const newGameButton = document.querySelector("#newGameButton") ;
+const cardsString = document.querySelector("#cardsString") ;
+const handString = document.querySelector("#handString") ;
+const versionString = document.querySelector("#versionString") ;
+const name1String = document.querySelector("#Sp1Naam") ;
+const name2String = document.querySelector("#Sp2Naam") ;
+const name3String = document.querySelector("#Sp3Naam") ;
+const name4String = document.querySelector("#Sp4Naam") ;
 
-versionString.innerText = VERSION
+versionString.innerText = VERSION ;
 
-class Hand {
-  bid = ""
-  tricks = ""
-  score = 0
-  total = 0
+//Hand
 
-  next = null
-  previous = null
-  index = 0
+function new_hand(previous) {
+  const hand = {
+    bid: "",
+    tricks: "",
+    score: 0,
+    total: 0,
+    previous: previous,
+    index: 0
+  } ;
+  if ( hand.previous !== null ) {
+    hand.index = hand.previous.index+1 ;
+    hand.total = hand.previous.total ;
+  } 
+  return hand ;
+} 
 
-  constructor(previous) {
-
-    this.previous = previous
-
-    if ( this.previous !== null ) {
-      this.previous.next = this
-      this.index = this.previous.index+1
-      this.total = this.previous.total
-    }
+function calculate_hand(hand) {
+  if (hand.bid !== "") {
+    hand.score = hand.tricks * 5 ;
+    if ( hand.bid == hand.tricks ) {
+      hand.score += (hand.index+1)*10 ;
+    } 
+  } 
+  if ( hand.previous !== null ) {
+    calculate_hand(hand.previous) ;
+    hand.total = hand.previous.total + hand.score ;
+  } else {
+    hand.total = hand.score ;
   }
+} 
 
-  calculate() {
-    if (this.bid !== "") {
-      this.score = this.tricks * 5
-      if ( this.bid == this.tricks ) {
-        this.score += (this.index+1)*10
-      } 
+function display_hand(hand, bidinput, tricksinput, scoreinput, totalinput) {
+  bidinput.value = hand.bid ;
+  tricksinput.value = hand.tricks ;
+  scoreinput.value = hand.score ;
+  totalinput.value = hand.total ;
+}
+
+function retrieve_hand(hand, bidinput, tricksinput) {
+  hand.bid = parseInt(bidinput.value || "0", 10) ;
+  hand.tricks = parseInt(tricksinput.value || "0", 10) ;
+}
+
+// PlayerHands
+
+function new_playerhands() {
+  return [new_hand(null)] ;
+}
+
+function calculate_playerhands(playerhands) {
+  calculate_hand(playerhands[playerhands.length-1]) ;
+}
+
+function new_hand_playerhands(playerhands) {
+  playerhands.push(new_hand(playerhands[playerhands.length-1])) ;
+}
+
+function display_playerhands(playerhands, prefix, displayed_hand) {
+  display_hand(
+    playerhands[displayed_hand],
+    document.querySelector(prefix+"Geboden"),
+    document.querySelector(prefix+"Gehaald"),
+    document.querySelector(prefix+"Score"),
+    document.querySelector(prefix+"Stand"),
+  ) ;
+}
+
+function retrieve_playerhands(playerhands, prefix, displayed_hand) {
+  retrieve_hand(
+    playerhands[displayed_hand],
+    document.querySelector(prefix+"Geboden"),
+    document.querySelector(prefix+"Gehaald")
+  ) ;
+}
+
+function remove_linked_hands(playerhands) {
+  playerhands.forEach(
+    function(hand) {
+      hand.previous = null ;
     }
-    if ( this.previous !== null ) {
-      this.previous.calculate()
-      this.total = this.previous.total + this.score
-    } else {
-      this.total = this.score
+  ) ;
+}
+
+function restore_linked_hands(playerhands) {
+  playerhands.forEach(
+    function(hand, idx, hands) {
+      if (idx > 0) {
+        hand.previous = hands[idx-1] ;
+      }
     }
-  }
+  ) ;
+}
 
-  display(bidinput, tricksinput, scoreinput, totalinput) {
-    bidinput.value = this.bid
-    tricksinput.value = this.tricks
-    scoreinput.value = this.score
-    totalinput.value = this.total
-  }
+// QuantumBridge
 
-  retrieve(bidinput, tricksinput) {
-    this.bid = parseInt(bidinput.value || "0", 10)
-    this.tricks = parseInt(tricksinput.value || "0", 10)
+function new_quantumbridge() {
+  const quantumbridge = {
+    max_hands: 13,
+    cards_in_first_hand: 1,
+    displayed_hand: 0,
+    name1: "Speler 1",
+    name2: "Speler 2",
+    name3: "Speler 3",
+    name4: "Speler 4",
+    player1: null,
+    player2: null,
+    player3: null,
+    player4: null
+  } ;
+
+  reset_quantumbridge(quantumbridge) ;
+  return quantumbridge ;
+}
+
+function reset_quantumbridge(qb) {
+  qb.player1 = new_playerhands() ;
+  qb.player2 = new_playerhands() ;
+  qb.player3 = new_playerhands() ;
+  qb.player4 = new_playerhands() ;
+  qb.displayed_hand = 0 ;
+  display_quantumbridge(qb) ;
+}
+
+function size_quantumbridge(qb) {
+    return qb.player1.length ;
+}
+
+function calculate_quantumbridge(qb) {
+  retrieve_quantumbridge(qb) ;
+  calculate_playerhands(qb.player1) ;
+  calculate_playerhands(qb.player2) ;
+  calculate_playerhands(qb.player3) ;
+  calculate_playerhands(qb.player4) ;
+  save_quantumbridge(qb) ;
+  display_quantumbridge(qb) ;
+}
+
+function new_hand_quantumbridge(qb) {
+  if (size_quantumbridge(qb) < qb.max_hands) {
+    new_hand_playerhands(qb.player1) ;
+    new_hand_playerhands(qb.player2) ;
+    new_hand_playerhands(qb.player3) ;
+    new_hand_playerhands(qb.player4) ;
+  }
+  qb.displayed_hand = size_quantumbridge(qb) - 1 ;
+  save_quantumbridge(qb) ;
+  display_quantumbridge(qb) ;
+}
+
+function display_quantumbridge(qb) {
+  handString.innerText = "Huidige ronde: "+ size_quantumbridge(qb) + " kaart(en)" ;
+  displayString.innerText = "Overzicht ronde "+(qb.displayed_hand+1)+":" ;
+  name1String.value = qb.name1 ;
+  name2String.value = qb.name2 ;
+  name3String.value = qb.name3 ;
+  name4String.value = qb.name4 ;
+  display_playerhands(qb.player1, "#Sp1", qb.displayed_hand) ;
+  display_playerhands(qb.player2, "#Sp2", qb.displayed_hand) ;
+  display_playerhands(qb.player3, "#Sp3", qb.displayed_hand) ;
+  display_playerhands(qb.player4, "#Sp4", qb.displayed_hand) ;
+  enable_buttons_quantumbridge(qb) ;
+}
+
+function retrieve_quantumbridge(qb) {
+  qb.name1 = name1String.value ;
+  qb.name2 = name2String.value ;
+  qb.name3 = name3String.value ;
+  qb.name4 = name4String.value ;
+  retrieve_playerhands(qb.player1, "#Sp1", qb.displayed_hand) ;
+  retrieve_playerhands(qb.player2, "#Sp2", qb.displayed_hand) ;
+  retrieve_playerhands(qb.player3, "#Sp3", qb.displayed_hand) ;
+  retrieve_playerhands(qb.player4, "#Sp4", qb.displayed_hand) ;
+}
+
+function enable_buttons_quantumbridge(qb) {
+  if (qb.displayed_hand == (size_quantumbridge(qb) - 1)) {
+    calcButton.disabled = false ;
+    newButton.disabled = false ;
+    redoButton.disabled = true ;
+  } else {
+    calcButton.disabled = true ;
+    newButton.disabled = true ;
+    redoButton.disabled = false ;
   }
 }
 
-class PlayerHands {
-  hands = []
-
-  constructor() {
-    this.hands = [
-      new Hand(null)
-    ]
+function display_next_quantumbridge(qb) {
+  if (qb.displayed_hand < qb.player1.length - 1 ) {
+    qb.displayed_hand += 1 ;
   }
-
-  calculate() {
-    this.hands[this.hands.length-1].calculate()
-  }
-
-  new_hand() {
-    this.hands.push(new Hand(this.hands[this.hands.length-1]))
-  }
-
-  display_hand(prefix, displayed_hand) {
-    this.hands[displayed_hand].display(
-      document.querySelector(prefix+"Geboden"),
-      document.querySelector(prefix+"Gehaald"),
-      document.querySelector(prefix+"Score"),
-      document.querySelector(prefix+"Stand"),
-    )
-  }
-
-  retrieve(prefix, displayed_hand) {
-    this.hands[displayed_hand].retrieve(
-      document.querySelector(prefix+"Geboden"),
-      document.querySelector(prefix+"Gehaald")
-    )
-  }
+  enable_buttons_quantumbridge(qb) ;
+  display_quantumbridge(qb) ;
 }
 
-class QuantumBridge {
-  max_hands = 13
-  cards_in_first_hand = 1
-  displayed_hand = 0
-  player1 = null
-  player2 = null
-  player3 = null
-  player4 = null
-
-  constructor() {
-    this.reset()
+function display_previous_quantumbridge(qb) {
+  if (qb.displayed_hand > 0) {
+    qb.displayed_hand -= 1 ;
   }
-
-  reset() {
-    this.player1 = new PlayerHands()
-    this.player2 = new PlayerHands()
-    this.player3 = new PlayerHands()
-    this.player4 = new PlayerHands()
-    this.displayed_hand = this.player1.hands.length - 1
-    this.display()
-  }
-  size() {
-    return this.player1.hands.length
-  }
-
-  calculate() {
-    this.retrieve()
-    this.player1.calculate()
-    this.player2.calculate()
-    this.player3.calculate()
-    this.player4.calculate()
-    this.display()
-  }
-
-  new_hand() {
-    if (this.size() < this.max_hands) {
-      this.player1.new_hand()
-      this.player2.new_hand()
-      this.player3.new_hand()
-      this.player4.new_hand()
-    }
-    this.displayed_hand = this.size() - 1
-    
-    this.display()
-  }
-
-  display() {
-    handString.innerText = "Huidige ronde: "+ this.size() + " kaart(en)"
-    displayString.innerText = "Overzicht ronde "+(this.displayed_hand+1)+":"
-    this.player1.display_hand("#Sp1", this.displayed_hand)
-    this.player2.display_hand("#Sp2", this.displayed_hand)
-    this.player3.display_hand("#Sp3", this.displayed_hand)
-    this.player4.display_hand("#Sp4", this.displayed_hand)
-    this.enable_buttons()
-  }
-
-  enable_buttons() {
-    if (this.displayed_hand == (this.size() - 1)) {
-      calcButton.disabled = false
-      newButton.disabled = false
-      redoButton.disabled = true
-    } else {
-      calcButton.disabled = true
-      newButton.disabled = true
-      redoButton.disabled = false
-    }
-  }
-
-  retrieve() {
-    this.player1.retrieve("#Sp1", this.displayed_hand)
-    this.player2.retrieve("#Sp2", this.displayed_hand)
-    this.player3.retrieve("#Sp3", this.displayed_hand)
-    this.player4.retrieve("#Sp4", this.displayed_hand)
-  }
-
-  display_next() {
-    if (this.displayed_hand < this.player1.hands.length - 1 ) {
-      this.displayed_hand += 1
-    }
-    this.enable_buttons()
-    this.display()
-  }
-
-  display_previous() {
-    if (this.displayed_hand > 0) {
-      this.displayed_hand -= 1
-    }
-    this.enable_buttons()
-    this.display()
-  }
-
+  enable_buttons_quantumbridge(qb) ;
+  display_quantumbridge(qb) ;
 }
 
+function remove_linked_hands_quantumbridge(qb) {
+  remove_linked_hands(qb.player1) ;
+  remove_linked_hands(qb.player2) ;
+  remove_linked_hands(qb.player3) ;
+  remove_linked_hands(qb.player4) ;
+}
+
+function restore_linked_hands_quantumbridge(qb) {
+  restore_linked_hands(qb.player1) ;
+  restore_linked_hands(qb.player2) ;
+  restore_linked_hands(qb.player3) ;
+  restore_linked_hands(qb.player4) ;
+}
 
 function closeDialog(dialog) {
-    dialog.style.display = 'none';
-    dialog.close(); 
+    dialog.style.display = 'none' ;
+    dialog.close() ; 
 }
 
 function showConfirmDialog(config, accept, reject) {
 
-    var titleTxt = config.title || 'Confirm?';
-    var okTxt = config.ok || 'Ja';
-    var cancelTxt = config.cancel || 'Nee';
+    var titleTxt = config.title || 'Confirm?' ;
+    var okTxt = config.ok || 'Ja' ;
+    var cancelTxt = config.cancel || 'Nee' ;
 
-    var dialog = document.querySelector('#confirm');
-    var title = document.querySelector('#confirm_title');
-    var ok_button = document.querySelector('#confirm_ok');
-    var cancel_button = document.querySelector('#confirm_cancel');
+    var dialog = document.querySelector('#confirm') ;
+    var title = document.querySelector('#confirm_title') ;
+    var ok_button = document.querySelector('#confirm_ok') ;
+    var cancel_button = document.querySelector('#confirm_cancel') ;
 
-    title.innerText = titleTxt;
-    ok_button.innerText = okTxt;
-    cancel_button.innerText = cancelTxt;
+    title.innerText = titleTxt ;
+    ok_button.innerText = okTxt ;
+    cancel_button.innerText = cancelTxt ;
 
     ok_button.onclick = function() {
-        accept();
-        closeDialog(dialog);
-    };
+        accept() ;
+        closeDialog(dialog) ;
+    } ;
     cancel_button.onclick = function() {
-        reject();
-        closeDialog(dialog);
-    };
+        reject() ;
+        closeDialog(dialog) ;
+    } ;
 
-    dialog.style.display = 'flex';
-    dialog.showModal();
+    dialog.style.display = 'flex' ;
+    dialog.showModal() ;
 }
 
 function confirmDialog(config, accept, reject) {
     return new Promise(function() {
-        showConfirmDialog(config, accept, reject);
-    });
+        showConfirmDialog(config, accept, reject) ;
+    }) ;
 }
 
-const quantumBridge = new QuantumBridge()
+var quantumBridge = new_quantumbridge() ;
+
+function save_quantumbridge(qb) {
+  retrieve_quantumbridge(qb) ;
+  if (typeof(Storage) !== "undefined") {
+    remove_linked_hands_quantumbridge(qb);
+    localStorage.setItem(
+      "quantumBridge", 
+      JSON.stringify(qb)
+    ) ;
+    restore_linked_hands_quantumbridge(qb);
+  }
+}
+
+function restore_quantumbridge() {
+  if (typeof(Storage) !== "undefined") {
+    if ("quantumBridge" in localStorage) {
+      quantumBridge = JSON.parse(localStorage.getItem("quantumBridge")) ;
+      restore_linked_hands_quantumbridge(quantumBridge);
+      display_quantumbridge(quantumBridge)
+    }
+  }
+}
 
 backButton.onclick = function() {
-  quantumBridge.display_previous()
-}
+  display_previous_quantumbridge(quantumBridge) ;
+} ;
 
 calcButton.onclick = function() {
-  quantumBridge.calculate()
-}
+  calculate_quantumbridge(quantumBridge) ;
+} ;
 
 newButton.onclick = function() {
-  quantumBridge.new_hand()
-}
+  new_hand_quantumbridge(quantumBridge) ;
+} ;
 
 nextButton.onclick = function () {
-  quantumBridge.display_next()
-}
+  display_next_quantumbridge(quantumBridge) ;
+} ;
 
 redoButton.onclick = function () {
-  calcButton.disabled = false
-  newButton.disabled = false
-}
+  calcButton.disabled = false ;
+  newButton.disabled = false ;
+} ;
 
 newGameButton.onclick = function () {
   confirmDialog(
@@ -457,11 +525,15 @@ newGameButton.onclick = function () {
       ok: "Ja",
       cancel: "Nee"
     },
-      function () {quantumBridge.reset()},
+      function () {
+      	reset_quantumbridge(quantumBridge) ; 
+        save_quantumbridge(qb) ;
+      },
       function () {}
-  );
-}
+  ) ;
+} ;
 
+addEventListener("load", (event) => { restore_quantumbridge() ; })
 
     </script>
 </body>
